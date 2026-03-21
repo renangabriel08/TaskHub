@@ -40,7 +40,7 @@ class RegisterTypeSelectionScreen extends StatelessWidget {
             _RegisterTypeCard(
               icon: Icons.person_pin,
               title: 'Prestador Autônomo',
-              description: 'Oferecendo serviços (Pessoa Física)',
+              description: 'Oferecendo serviços',
               onTap: () {
                 Navigator.of(context).pushNamed('/register/professional');
               },
@@ -49,8 +49,8 @@ class RegisterTypeSelectionScreen extends StatelessWidget {
             // Company Option
             _RegisterTypeCard(
               icon: Icons.business,
-              title: 'Empresa Prestadora',
-              description: 'Oferecendo serviços (Pessoa Jurídica)',
+              title: 'Empresa',
+              description: 'Contrata serviços',
               onTap: () {
                 Navigator.of(context).pushNamed('/register/company');
               },

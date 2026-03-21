@@ -103,6 +103,45 @@ class _RequestsScreenState extends State<RequestsScreen> {
     ).showSnackBar(const SnackBar(content: Text('Solicitação recusada')));
   }
 
+  Future<void> _proposeReschedule(int id) async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 60)),
+    );
+
+    if (pickedDate == null || !mounted) return;
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime == null) return;
+
+    final proposedDate =
+        '${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}';
+    final proposedTime =
+        '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}';
+
+    setState(() {
+      final index = _receivedRequests.indexWhere((r) => r['id'] == id);
+      if (index != -1) {
+        _receivedRequests[index]['status'] = 'proposta_reagendamento';
+        _receivedRequests[index]['proposedDate'] = proposedDate;
+        _receivedRequests[index]['proposedTime'] = proposedTime;
+      }
+    });
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Proposta enviada: $proposedDate às $proposedTime'),
+      ),
+    );
+  }
+
   Color _getStatusColor(String status) {
     switch (status) {
       case 'pendente':
@@ -111,6 +150,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
         return Colors.green;
       case 'recusado':
         return Colors.red;
+      case 'proposta_reagendamento':
+        return AppColors.primary;
       default:
         return Colors.grey;
     }
@@ -124,6 +165,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
         return 'Aceito';
       case 'recusado':
         return 'Recusado';
+      case 'proposta_reagendamento':
+        return 'Proposta de Reagendamento';
       default:
         return status;
     }
@@ -509,6 +552,28 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   ),
                 ],
               ),
+              if (request['status'] == 'proposta_reagendamento') ...[
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Text(
+                    'Nova proposta: ${request['proposedDate']} às ${request['proposedTime']}',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
               // Accept/Reject Buttons (only if pending)
               if (isPending) ...[
                 const SizedBox(height: 12),
@@ -538,6 +603,19 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _proposeReschedule(request['id']),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(color: AppColors.primary),
+                    ),
+                    icon: const Icon(Icons.schedule),
+                    label: const Text('Reagendar'),
+                  ),
                 ),
               ],
             ],

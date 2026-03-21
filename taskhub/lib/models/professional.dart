@@ -78,6 +78,7 @@ class Professional {
   final String? specialties;
   final String? description;
   final int yearsExperience;
+  final int level;
   final String? portfolioUrl;
   final List<String>? portfolioItems;
   final List<Education>? education;
@@ -100,6 +101,7 @@ class Professional {
     this.specialties,
     this.description,
     this.yearsExperience = 0,
+    this.level = 1,
     this.portfolioUrl,
     this.portfolioItems,
     this.education,
@@ -156,6 +158,9 @@ class Professional {
       specialties: json['specialties'],
       description: json['description'],
       yearsExperience: json['years_experience'] ?? 0,
+      level: json['level'] is int
+          ? json['level']
+          : int.tryParse(json['level']?.toString() ?? '') ?? 1,
       portfolioUrl: json['portfolio_url'],
       portfolioItems: json['portfolio_items'] != null
           ? List<String>.from(json['portfolio_items'])
@@ -188,6 +193,7 @@ class Professional {
       'specialties': specialties,
       'description': description,
       'years_experience': yearsExperience,
+      'level': level,
       'portfolio_url': portfolioUrl,
       'portfolio_items': portfolioItems,
       'education': education?.map((e) => e.toJson()).toList(),

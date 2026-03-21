@@ -1,11 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:taskhub/config/app_colors.dart';
 import 'package:taskhub/providers/auth_provider.dart';
-import 'package:taskhub/widgets/app_bar_widget.dart';
 import 'package:taskhub/utils/validation_helper.dart';
+import 'package:taskhub/widgets/app_bar_widget.dart';
 
 class RegisterProfessionalScreen extends StatefulWidget {
   const RegisterProfessionalScreen({super.key});
@@ -24,13 +27,14 @@ class _RegisterProfessionalScreenState
   late TextEditingController _phoneController;
   late TextEditingController _passwordController;
   late TextEditingController _confirmPasswordController;
-  late TextEditingController _professionalNameController;
-  late TextEditingController _descriptionController;
-  late TextEditingController _yearsExperienceController;
-  late TextEditingController _areaOfExpertiseController;
+
+  late TextEditingController _cepController;
+  late TextEditingController _streetController;
+  late TextEditingController _numberController;
+  late TextEditingController _complementController;
+  late TextEditingController _neighborhoodController;
   late TextEditingController _stateController;
   late TextEditingController _cityController;
-  late TextEditingController _radiusController;
 
   File? _profileImage;
   final ImagePicker _imagePicker = ImagePicker();
@@ -38,6 +42,7 @@ class _RegisterProfessionalScreenState
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeTerms = false;
+  bool _isLoadingCEP = false;
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -50,13 +55,14 @@ class _RegisterProfessionalScreenState
     _phoneController = TextEditingController();
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
-    _professionalNameController = TextEditingController();
-    _descriptionController = TextEditingController();
-    _yearsExperienceController = TextEditingController();
-    _areaOfExpertiseController = TextEditingController();
+
+    _cepController = TextEditingController();
+    _streetController = TextEditingController();
+    _numberController = TextEditingController();
+    _complementController = TextEditingController();
+    _neighborhoodController = TextEditingController();
     _stateController = TextEditingController();
     _cityController = TextEditingController();
-    _radiusController = TextEditingController();
   }
 
   @override
@@ -68,18 +74,65 @@ class _RegisterProfessionalScreenState
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _professionalNameController.dispose();
-    _descriptionController.dispose();
-    _yearsExperienceController.dispose();
-    _areaOfExpertiseController.dispose();
+
+    _cepController.dispose();
+    _streetController.dispose();
+    _numberController.dispose();
+    _complementController.dispose();
+    _neighborhoodController.dispose();
     _stateController.dispose();
     _cityController.dispose();
-    _radiusController.dispose();
     super.dispose();
   }
 
   void _handleRegister() {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (!_agreeTerms) {
+      _showErrorSnackBar('Aceite os termos para continuar');
+      return;
+    }
+
     Navigator.of(context).pushReplacementNamed('/home');
+  }
+
+  Future<void> _fetchAddressFromCEP(String cep) async {
+    if (cep.length != 8) return;
+
+    setState(() => _isLoadingCEP = true);
+
+    try {
+      final response = await http
+          .get(Uri.parse('https://viacep.com.br/ws/$cep/json/'))
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['erro'] != true) {
+          setState(() {
+            _streetController.text = data['logradouro'] ?? '';
+            _neighborhoodController.text = data['bairro'] ?? '';
+            _cityController.text = data['localidade'] ?? '';
+            _stateController.text = data['uf'] ?? '';
+          });
+        } else {
+          _showErrorSnackBar('CEP não encontrado');
+        }
+      } else {
+        _showErrorSnackBar('Erro ao buscar CEP');
+      }
+    } catch (_) {
+      _showErrorSnackBar('Erro de conexão ao buscar CEP');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingCEP = false);
+      }
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _pickProfileImage() async {
@@ -145,7 +198,6 @@ class _RegisterProfessionalScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Foto de Perfil
                 Center(
                   child: GestureDetector(
                     onTap: _pickProfileImage,
@@ -182,19 +234,14 @@ class _RegisterProfessionalScreenState
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text(
-                  'Informações Pessoais',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
+
+                _buildSectionTitle(context, 'Informações Pessoais'),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _fullNameController,
-                  decoration: _inputDecoration(
-                    'Nome Completo *',
-                    Icons.person_outline,
-                  ),
+                  validator: (value) =>
+                      ValidationHelper.validateRequired(value, 'Nome completo'),
+                  decoration: _inputDecoration('Nome Completo *', Icons.person_outline),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -206,6 +253,7 @@ class _RegisterProfessionalScreenState
                       TextPosition(offset: _cpfController.text.length),
                     );
                   },
+                  validator: ValidationHelper.validateCPF,
                   decoration: _inputDecoration('CPF *', Icons.credit_card),
                 ),
                 const SizedBox(height: 12),
@@ -215,30 +263,34 @@ class _RegisterProfessionalScreenState
                   onTap: () async {
                     final pickedDate = await showDatePicker(
                       context: context,
-                      initialDate: DateTime.now().subtract(
-                        const Duration(days: 365 * 18),
-                      ),
+                      initialDate:
+                          DateTime.now().subtract(const Duration(days: 365 * 18)),
                       firstDate: DateTime(1950),
-                      lastDate: DateTime.now().subtract(
-                        const Duration(days: 365 * 18),
-                      ),
+                      lastDate:
+                          DateTime.now().subtract(const Duration(days: 365 * 18)),
                     );
                     if (pickedDate != null) {
                       _birthDateController.text =
                           '${pickedDate.day}/${pickedDate.month}/${pickedDate.year}';
                     }
                   },
+                  validator: (value) => ValidationHelper.validateRequired(
+                    value,
+                    'Data de nascimento',
+                  ),
                   decoration: _inputDecoration(
                     'Data de Nascimento *',
                     Icons.calendar_today,
                   ),
                 ),
                 const SizedBox(height: 16),
+
                 _buildSectionTitle(context, 'Conta'),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  validator: ValidationHelper.validateEmail,
                   decoration: _inputDecoration('Email *', Icons.email_outlined),
                 ),
                 const SizedBox(height: 12),
@@ -251,23 +303,20 @@ class _RegisterProfessionalScreenState
                       TextPosition(offset: _phoneController.text.length),
                     );
                   },
-                  decoration: _inputDecoration(
-                    'Telefone',
-                    Icons.phone_outlined,
-                  ),
+                  validator: ValidationHelper.validatePhone,
+                  decoration: _inputDecoration('Telefone', Icons.phone_outlined),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  validator: ValidationHelper.validatePassword,
                   decoration: InputDecoration(
                     hintText: 'Senha *',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -278,10 +327,8 @@ class _RegisterProfessionalScreenState
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -310,49 +357,61 @@ class _RegisterProfessionalScreenState
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildSectionTitle(context, 'Informações Profissionais'),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _professionalNameController,
-                  decoration: _inputDecoration(
-                    'Nome Profissional',
-                    Icons.work_outline,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _areaOfExpertiseController,
-                  decoration: _inputDecoration('Área de Atuação', null),
-                ),
-                const SizedBox(height: 12),
 
-                TextFormField(
-                  controller: _yearsExperienceController,
-                  keyboardType: TextInputType.number,
-                  decoration: _inputDecoration('Anos de Experiência', null),
-                ),
+                _buildSectionTitle(context, 'Endereço'),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _descriptionController,
-                  maxLines: 3,
-                  decoration: _inputDecoration('Descrição do Trabalho', null),
+                  controller: _cepController,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _cepController.text = InputMask.formatCEP(value);
+                    _cepController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _cepController.text.length),
+                    );
+
+                    final rawCep = _cepController.text.replaceAll(RegExp(r'\D'), '');
+                    if (rawCep.length == 8) {
+                      _fetchAddressFromCEP(rawCep);
+                    }
+                  },
+                  validator: ValidationHelper.validateCEP,
+                  decoration: InputDecoration(
+                    hintText: 'CEP',
+                    prefixIcon: const Icon(Icons.location_on_outlined),
+                    suffix: _isLoadingCEP
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primary,
+                              ),
+                            ),
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
                 ),
                 const SizedBox(height: 12),
-                _buildSectionTitle(context, 'Área de Atendimento'),
-                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       flex: 1,
                       child: TextFormField(
                         controller: _stateController,
+                        readOnly: true,
+                        validator: (value) =>
+                            ValidationHelper.validateRequired(value, 'Estado'),
                         decoration: _smallInputDecoration('Estado'),
                       ),
                     ),
@@ -361,6 +420,9 @@ class _RegisterProfessionalScreenState
                       flex: 2,
                       child: TextFormField(
                         controller: _cityController,
+                        readOnly: true,
+                        validator: (value) =>
+                            ValidationHelper.validateRequired(value, 'Cidade'),
                         decoration: _smallInputDecoration('Cidade'),
                       ),
                     ),
@@ -368,14 +430,44 @@ class _RegisterProfessionalScreenState
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
-                  controller: _radiusController,
-                  keyboardType: TextInputType.number,
-                  decoration: _inputDecoration(
-                    'Raio de Atendimento (km)',
-                    null,
-                  ),
+                  controller: _neighborhoodController,
+                  readOnly: true,
+                  validator: (value) =>
+                      ValidationHelper.validateRequired(value, 'Bairro'),
+                  decoration: _inputDecoration('Bairro', null),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _streetController,
+                  readOnly: true,
+                  validator: (value) => ValidationHelper.validateRequired(value, 'Rua'),
+                  decoration: _inputDecoration('Rua', null),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: TextFormField(
+                        controller: _numberController,
+                        keyboardType: TextInputType.number,
+                        validator: (value) =>
+                            ValidationHelper.validateRequired(value, 'Número'),
+                        decoration: _smallInputDecoration('Número'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        controller: _complementController,
+                        decoration: _smallInputDecoration('Complemento'),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
+
                 CheckboxListTile(
                   value: _agreeTerms,
                   onChanged: (value) {
@@ -386,15 +478,13 @@ class _RegisterProfessionalScreenState
                   activeColor: AppColors.primary,
                   title: const Text(
                     'Aceito os termos de uso e regras da plataforma',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                   ),
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
                 ),
                 const SizedBox(height: 24),
+
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -428,6 +518,7 @@ class _RegisterProfessionalScreenState
                   ),
                 ),
                 const SizedBox(height: 16),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -462,9 +553,10 @@ class _RegisterProfessionalScreenState
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
-      style: Theme.of(
-        context,
-      ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+      style: Theme.of(context)
+          .textTheme
+          .titleLarge
+          ?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 

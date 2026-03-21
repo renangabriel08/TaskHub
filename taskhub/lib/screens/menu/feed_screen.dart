@@ -11,6 +11,7 @@ class FeedScreen extends StatelessWidget {
       'id': 1,
       'professionalName': 'Carlos Eletricista',
       'category': 'Elétrica',
+      'level': 3,
       'description':
           'Instalação de novo painel elétrico na residência do Sr. João. Trabalho realizado com excelência e segurança.',
       'rating': 4.8,
@@ -22,6 +23,7 @@ class FeedScreen extends StatelessWidget {
       'id': 2,
       'professionalName': 'Andrea Fisioterapia',
       'category': 'Saúde',
+      'level': 3,
       'description':
           'Sessão de fisioterapia completa com análise postural e tratamento de dores nas costas. Resultado excepcional!',
       'rating': 4.9,
@@ -33,6 +35,7 @@ class FeedScreen extends StatelessWidget {
       'id': 3,
       'professionalName': 'Lucas Encanador',
       'category': 'Hidráulica',
+      'level': 2,
       'description':
           'Conserto de vazamento em cano de cobre e substituição de sifão. Trabalho rápido e eficiente!',
       'rating': 4.7,
@@ -44,6 +47,7 @@ class FeedScreen extends StatelessWidget {
       'id': 4,
       'professionalName': 'Marina Design de Interiores',
       'category': 'Decoração',
+      'level': 3,
       'description':
           'Reforma completa de sala de estar com novo layout, pintura e acabamentos. Ambiente completamente transformado!',
       'rating': 5.0,
@@ -55,6 +59,7 @@ class FeedScreen extends StatelessWidget {
       'id': 5,
       'professionalName': 'Roberto Climatização',
       'category': 'Ar Condicionado',
+      'level': 2,
       'description':
           'Instalação de ar condicionado split com isolamento térmico e higienização. Sistema funcionando perfeitamente!',
       'rating': 4.6,
@@ -101,6 +106,7 @@ class FeedScreen extends StatelessWidget {
                 'id': post['id'],
                 'name': post['professionalName'],
                 'category': post['category'],
+                'level': post['level'],
                 'rating': post['rating'],
                 'reviews': post['reviews'],
                 'avatar': post['avatar'],

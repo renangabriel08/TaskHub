@@ -112,6 +112,7 @@ class RegistrationService {
           'specialties': professionalData.specialties,
           'description': professionalData.description,
           'years_experience': professionalData.yearsExperience,
+          'level': professionalData.level,
           'portfolio_url': professionalData.portfolioUrl,
           'portfolio_items': professionalData.portfolioItems,
           'education': professionalData.education

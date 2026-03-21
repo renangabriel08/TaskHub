@@ -14,6 +14,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
   late TextEditingController _searchController;
   String _searchQuery = '';
   String? _selectedCategory;
+  int? _selectedLevel;
   String _sortBy =
       'relevancia'; // relevancia, rating, reviews, preco_asc, preco_desc
 
@@ -33,6 +34,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
       'id': 1,
       'name': 'Carlos Eletricista',
       'category': 'Elétrica',
+      'level': 3,
       'rating': 4.8,
       'reviews': 124,
       'price': 'R\$ 80-150/h',
@@ -44,6 +46,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
       'id': 2,
       'name': 'Lucas Encanador',
       'category': 'Hidráulica',
+      'level': 2,
       'rating': 4.7,
       'reviews': 156,
       'price': 'R\$ 70-120/h',
@@ -55,6 +58,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
       'id': 3,
       'name': 'Marina Design',
       'category': 'Decoração',
+      'level': 3,
       'rating': 5.0,
       'reviews': 203,
       'price': 'R\$ 100-200/h',
@@ -66,6 +70,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
       'id': 4,
       'name': 'Roberto HVAC',
       'category': 'Ar Condicionado',
+      'level': 2,
       'rating': 4.6,
       'reviews': 95,
       'price': 'R\$ 150-300/serviço',
@@ -77,6 +82,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
       'id': 5,
       'name': 'Andrea Fisio',
       'category': 'Saúde',
+      'level': 3,
       'rating': 4.9,
       'reviews': 87,
       'price': 'R\$ 120-150/sessão',
@@ -88,6 +94,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
       'id': 6,
       'name': 'João Pintor',
       'category': 'Pintura',
+      'level': 1,
       'rating': 4.5,
       'reviews': 78,
       'price': 'R\$ 60-100/h',
@@ -149,6 +156,13 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
               .where((prof) => prof['category'] == _selectedCategory)
               .toList();
         }
+      }
+
+      // Filter by level
+      if (_selectedLevel != null) {
+        filtered = filtered
+            .where((prof) => prof['level'] == _selectedLevel)
+            .toList();
       }
 
       // Sort
@@ -341,6 +355,95 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
                             ),
                           ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Level Filter
+                    Text(
+                      'Nível',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedLevel = null;
+                            });
+                            _updateFilters();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _selectedLevel == null
+                                  ? AppColors.primary
+                                  : Colors.white,
+                              border: Border.all(
+                                color: _selectedLevel == null
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Todos',
+                              style: TextStyle(
+                                color: _selectedLevel == null
+                                    ? Colors.white
+                                    : AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                        ...[1, 2, 3].map((level) {
+                          final isSelected = _selectedLevel == level;
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedLevel = level;
+                              });
+                              _updateFilters();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : Colors.white,
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.textSecondary,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'Nível $level',
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -611,7 +714,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          professional['category'] as String,
+                          '${professional['category']} • Nível ${professional['level']}',
                           style: const TextStyle(
                             fontSize: 11,
                             color: AppColors.accentCyan,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
+import 'dart:io';
 import 'package:taskhub/config/app_colors.dart';
 import 'package:taskhub/widgets/app_bar_widget.dart';
 
@@ -15,12 +17,10 @@ class HireProfessionalScreen extends StatefulWidget {
 
 class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
   final _formKey = GlobalKey<FormState>();
-  late List<Map<String, dynamic>> _services;
+  static const int _maxImages = 5;
 
   // Form fields
-  String? _selectedService;
   final _problemDescriptionController = TextEditingController();
-  final _otherServiceController = TextEditingController();
 
   // Location fields
   final _cepController = TextEditingController();
@@ -32,45 +32,19 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
 
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
-  List<String> _selectedImages = [];
+  final ImagePicker _imagePicker = ImagePicker();
+  List<XFile> _selectedImages = [];
   bool _isLoadingCEP = false;
 
   @override
   void initState() {
     super.initState();
-    _services = [
-      {
-        'id': 1,
-        'name': 'Instalação Elétrica',
-        'description': 'Instalação completa de painéis e circuitos elétricos',
-        'price': 'R\$ 150/h',
-      },
-      {
-        'id': 2,
-        'name': 'Manutenção Preventiva',
-        'description': 'Inspeção e manutenção de sistemas elétricos',
-        'price': 'R\$ 100/h',
-      },
-      {
-        'id': 3,
-        'name': 'Reparo de Emergência',
-        'description': 'Reparos urgentes de problemas elétricos',
-        'price': 'R\$ 200/h',
-      },
-      {
-        'id': 4,
-        'name': 'Outro',
-        'description': 'Especifique qual serviço você precisa',
-        'price': 'A consultar',
-      },
-    ];
     _cepController.addListener(_onCepChange);
   }
 
   @override
   void dispose() {
     _problemDescriptionController.dispose();
-    _otherServiceController.dispose();
     _cepController.dispose();
     _cidadeController.dispose();
     _estadoController.dispose();
@@ -148,16 +122,95 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
   }
 
   Future<void> _pickImages() async {
-    // Simulated image picker - in production use image_picker package
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Funcionalidade de upload de imagens em desenvolvimento'),
-      ),
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Tirar foto'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _pickFromCamera();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Escolher da galeria'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _pickFromGallery();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  Future<void> _pickFromCamera() async {
+    if (_selectedImages.length >= _maxImages) {
+      _showErrorSnackBar('Você pode adicionar no máximo $_maxImages fotos');
+      return;
+    }
+
+    final image = await _imagePicker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80,
+    );
+
+    if (image == null || !mounted) return;
+    _addPickedImages([image]);
+  }
+
+  Future<void> _pickFromGallery() async {
+    if (_selectedImages.length >= _maxImages) {
+      _showErrorSnackBar('Você pode adicionar no máximo $_maxImages fotos');
+      return;
+    }
+
+    final images = await _imagePicker.pickMultiImage(imageQuality: 80);
+    if (images.isEmpty || !mounted) return;
+    _addPickedImages(images);
+  }
+
+  void _addPickedImages(List<XFile> pickedImages) {
+    final availableSlots = _maxImages - _selectedImages.length;
+    final imagesToAdd = pickedImages.take(availableSlots).toList();
+
+    setState(() {
+      _selectedImages.addAll(imagesToAdd);
+    });
+
+    if (pickedImages.length > availableSlots) {
+      _showErrorSnackBar(
+        'Limite de $_maxImages fotos. Apenas as primeiras foram adicionadas.',
+      );
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
   }
 
   void _submitRequest() {
     if (_formKey.currentState!.validate()) {
+      if (_selectedImages.length < 1 || _selectedImages.length > _maxImages) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Adicione de 1 a 5 fotos do problema')),
+        );
+        return;
+      }
+
       if (_selectedDate == null || _selectedTime == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Selecione data e hora do agendamento')),
@@ -265,83 +318,6 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Service Selection
-                Text(
-                  'Qual serviço você precisa?',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButton<String>(
-                    value: _selectedService,
-                    hint: const Text('Selecione um serviço'),
-                    isExpanded: true,
-                    underline: const SizedBox(),
-                    items: _services.map((service) {
-                      return DropdownMenuItem<String>(
-                        value: service['id'].toString(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              service['name'],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              service['price'],
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() => _selectedService = value);
-                    },
-                  ),
-                ),
-                // If "Outro" is selected, show input field
-                if (_selectedService == '4') ...[
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _otherServiceController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Especifique qual serviço você precisa';
-                      }
-                      return null;
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Descreva qual serviço você precisa',
-                      prefixIcon: const Icon(Icons.edit),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: AppColors.primary,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
                 const SizedBox(height: 20),
 
                 // Problem Description
@@ -422,7 +398,7 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Máximo de 5 imagens',
+                          'Mínimo 1 e máximo de 5 imagens',
                           style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,
@@ -432,6 +408,48 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                     ),
                   ),
                 ),
+                if (_selectedImages.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(_selectedImages.length, (index) {
+                      final image = _selectedImages[index];
+                      return Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(image.path),
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            right: 2,
+                            top: 2,
+                            child: GestureDetector(
+                              onTap: () => _removeImage(index),
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                padding: const EdgeInsets.all(2),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                  ),
+                ],
                 const SizedBox(height: 20),
 
                 // Schedule Section
@@ -716,18 +734,6 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSummaryRow(
-                        'Serviço:',
-                        _selectedService == null
-                            ? 'Não selecionado'
-                            : _selectedService == '4'
-                            ? _otherServiceController.text.isEmpty
-                                  ? 'Outro (especificar)'
-                                  : _otherServiceController.text
-                            : _services[int.parse(_selectedService!) -
-                                  1]['name'],
-                      ),
-                      const SizedBox(height: 8),
                       _buildSummaryRow(
                         'Data e Hora:',
                         _selectedDate == null || _selectedTime == null
