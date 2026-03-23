@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:taskhub/config/app_colors.dart';
 import 'package:taskhub/providers/auth_provider.dart';
 import 'package:taskhub/widgets/app_bar_widget.dart';
-import 'package:taskhub/utils/validation_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

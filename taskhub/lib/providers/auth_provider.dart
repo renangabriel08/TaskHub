@@ -275,4 +275,17 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  // Set authenticated user (for post-registration)
+  void setAuthenticatedUser(
+    String accessToken,
+    String refreshToken,
+    User user,
+  ) {
+    _token = accessToken;
+    _refreshToken = refreshToken;
+    _user = user;
+    _errorMessage = null;
+    notifyListeners();
+  }
 }

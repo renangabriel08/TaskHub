@@ -273,10 +273,6 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
-                  validator: (value) => ValidationHelper.validatePasswordMatch(
-                    value,
-                    _passwordController.text,
-                  ),
                   decoration: InputDecoration(
                     hintText: 'Confirmar Senha *',
                     prefixIcon: const Icon(Icons.lock_outline),

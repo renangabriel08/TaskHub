@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:taskhub/config/app_colors.dart';
-import 'package:taskhub/providers/auth_provider.dart';
 import 'package:taskhub/widgets/app_bar_widget.dart';
 import 'package:taskhub/screens/menu/profile_screen.dart';
 import 'package:taskhub/screens/menu/home_menu_screen.dart';
@@ -29,8 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-
     return Scaffold(
       appBar: TaskHubAppBar(
         title: _titles[_selectedIndex],

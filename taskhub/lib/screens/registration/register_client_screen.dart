@@ -308,12 +308,6 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 TextFormField(
                   controller: _birthDateController,
                   keyboardType: TextInputType.datetime,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Data de nascimento é obrigatória';
-                    }
-                    return null;
-                  },
                   onTap: () async {
                     final DateTime? picked = await showDatePicker(
                       context: context,
@@ -420,10 +414,6 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
-                  validator: (value) => ValidationHelper.validatePasswordMatch(
-                    value,
-                    _passwordController.text,
-                  ),
                   decoration: InputDecoration(
                     hintText: 'Confirmar Senha *',
                     prefixIcon: const Icon(Icons.lock_outline),
