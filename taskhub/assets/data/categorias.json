@@ -1,0 +1,518 @@
+[
+    {
+        "id": "manutencao_reparos",
+        "name": "Manutenção & Reparos",
+        "subcategories": [
+            {
+                "id": "eletrica",
+                "name": "Elétrica"
+            },
+            {
+                "id": "hidraulica",
+                "name": "Hidráulica"
+            },
+            {
+                "id": "construcao",
+                "name": "Construção Civil"
+            },
+            {
+                "id": "marcenaria",
+                "name": "Marcenaria"
+            },
+            {
+                "id": "serralheria",
+                "name": "Serralheria"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "limpeza",
+        "name": "Limpeza & Conservação",
+        "subcategories": [
+            {
+                "id": "residencial",
+                "name": "Limpeza Residencial"
+            },
+            {
+                "id": "pos_obra",
+                "name": "Pós-obra"
+            },
+            {
+                "id": "estofados",
+                "name": "Limpeza de Estofados"
+            },
+            {
+                "id": "industrial",
+                "name": "Limpeza Industrial"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "domesticos",
+        "name": "Serviços Domésticos",
+        "subcategories": [
+            {
+                "id": "diarista",
+                "name": "Diarista"
+            },
+            {
+                "id": "passadeira",
+                "name": "Passadeira"
+            },
+            {
+                "id": "cozinheira",
+                "name": "Cozinheira"
+            },
+            {
+                "id": "baba",
+                "name": "Babá"
+            },
+            {
+                "id": "cuidador",
+                "name": "Cuidador de Idosos"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "automotivo",
+        "name": "Automotivo",
+        "subcategories": [
+            {
+                "id": "mecanica",
+                "name": "Mecânica"
+            },
+            {
+                "id": "lavagem",
+                "name": "Lavagem"
+            },
+            {
+                "id": "polimento",
+                "name": "Polimento"
+            },
+            {
+                "id": "guincho",
+                "name": "Guincho"
+            },
+            {
+                "id": "som",
+                "name": "Som Automotivo"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "tecnologia",
+        "name": "Tecnologia",
+        "subcategories": [
+            {
+                "id": "dev_mobile",
+                "name": "Desenvolvimento Mobile"
+            },
+            {
+                "id": "dev_web",
+                "name": "Desenvolvimento Web"
+            },
+            {
+                "id": "suporte",
+                "name": "Suporte Técnico"
+            },
+            {
+                "id": "redes",
+                "name": "Redes & Wi-Fi"
+            },
+            {
+                "id": "seguranca",
+                "name": "Segurança Digital"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "design",
+        "name": "Design & Criativo",
+        "subcategories": [
+            {
+                "id": "grafico",
+                "name": "Design Gráfico"
+            },
+            {
+                "id": "uiux",
+                "name": "UI/UX"
+            },
+            {
+                "id": "video",
+                "name": "Edição de Vídeo"
+            },
+            {
+                "id": "3d",
+                "name": "Modelagem 3D"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "midia",
+        "name": "Mídia & Conteúdo",
+        "subcategories": [
+            {
+                "id": "fotografia",
+                "name": "Fotografia"
+            },
+            {
+                "id": "filmagem",
+                "name": "Filmagem"
+            },
+            {
+                "id": "drone",
+                "name": "Drone"
+            },
+            {
+                "id": "social_media",
+                "name": "Social Media"
+            },
+            {
+                "id": "copy",
+                "name": "Copywriting"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "negocios",
+        "name": "Negócios & Administração",
+        "subcategories": [
+            {
+                "id": "contabilidade",
+                "name": "Contabilidade"
+            },
+            {
+                "id": "financeiro",
+                "name": "Consultoria Financeira"
+            },
+            {
+                "id": "marketing",
+                "name": "Marketing Digital"
+            },
+            {
+                "id": "rh",
+                "name": "RH & Recrutamento"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "educacao",
+        "name": "Educação & Treinamento",
+        "subcategories": [
+            {
+                "id": "escolar",
+                "name": "Aulas Escolares"
+            },
+            {
+                "id": "idiomas",
+                "name": "Idiomas"
+            },
+            {
+                "id": "musica",
+                "name": "Música"
+            },
+            {
+                "id": "tecnologia",
+                "name": "Programação"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "saude",
+        "name": "Saúde & Bem-estar",
+        "subcategories": [
+            {
+                "id": "personal",
+                "name": "Personal Trainer"
+            },
+            {
+                "id": "nutricao",
+                "name": "Nutrição"
+            },
+            {
+                "id": "massagem",
+                "name": "Massagem"
+            },
+            {
+                "id": "terapias",
+                "name": "Terapias Alternativas"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "eventos",
+        "name": "Eventos",
+        "subcategories": [
+            {
+                "id": "dj",
+                "name": "DJ"
+            },
+            {
+                "id": "garcom",
+                "name": "Garçom"
+            },
+            {
+                "id": "decoracao",
+                "name": "Decoração"
+            },
+            {
+                "id": "organizacao",
+                "name": "Organização de Eventos"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "transporte",
+        "name": "Transporte & Logística",
+        "subcategories": [
+            {
+                "id": "frete",
+                "name": "Frete"
+            },
+            {
+                "id": "mudanca",
+                "name": "Mudança"
+            },
+            {
+                "id": "motoboy",
+                "name": "Motoboy"
+            },
+            {
+                "id": "motorista",
+                "name": "Motorista Particular"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "pets",
+        "name": "Pets",
+        "subcategories": [
+            {
+                "id": "banho_tosa",
+                "name": "Banho & Tosa"
+            },
+            {
+                "id": "adestramento",
+                "name": "Adestramento"
+            },
+            {
+                "id": "passeio",
+                "name": "Passeador"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "jardinagem",
+        "name": "Jardinagem",
+        "subcategories": [
+            {
+                "id": "corte",
+                "name": "Corte de Grama"
+            },
+            {
+                "id": "paisagismo",
+                "name": "Paisagismo"
+            },
+            {
+                "id": "poda",
+                "name": "Poda de Árvores"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "seguranca",
+        "name": "Segurança",
+        "subcategories": [
+            {
+                "id": "cameras",
+                "name": "Câmeras"
+            },
+            {
+                "id": "alarmes",
+                "name": "Alarmes"
+            },
+            {
+                "id": "privada",
+                "name": "Segurança Privada"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "especializados",
+        "name": "Serviços Especializados",
+        "subcategories": [
+            {
+                "id": "detetive",
+                "name": "Detetive Particular"
+            },
+            {
+                "id": "pericia",
+                "name": "Perícia Técnica"
+            },
+            {
+                "id": "restauracao",
+                "name": "Restauração"
+            },
+            {
+                "id": "esoterico",
+                "name": "Serviços Esotéricos"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "decoracao",
+        "name": "Decoração",
+        "subcategories": [
+            {
+                "id": "decoracao_ambientes",
+                "name": "Decoração de Ambientes"
+            },
+            {
+                "id": "design_interiores",
+                "name": "Design de Interiores"
+            },
+            {
+                "id": "organizacao_espacos",
+                "name": "Organização de Espaços"
+            },
+            {
+                "id": "consultoria",
+                "name": "Consultoria de Decoração"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "decoracao",
+        "name": "Decoração",
+        "subcategories": [
+            {
+                "id": "decoracao_ambientes",
+                "name": "Decoração de Ambientes"
+            },
+            {
+                "id": "design_interiores",
+                "name": "Design de Interiores"
+            },
+            {
+                "id": "organizacao_espacos",
+                "name": "Organização de Espaços"
+            },
+            {
+                "id": "consultoria",
+                "name": "Consultoria de Decoração"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "pintura",
+        "name": "Pintura",
+        "subcategories": [
+            {
+                "id": "pintura_residencial",
+                "name": "Pintura Residencial"
+            },
+            {
+                "id": "pintura_comercial",
+                "name": "Pintura Comercial"
+            },
+            {
+                "id": "pintura_externa",
+                "name": "Pintura Externa"
+            },
+            {
+                "id": "texturas",
+                "name": "Texturas & Efeitos"
+            },
+            {
+                "id": "reparos",
+                "name": "Reparos e Acabamentos"
+            },
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    },
+    {
+        "id": "outros",
+        "name": "Outros",
+        "subcategories": [
+            {
+                "id": "outros",
+                "name": "Outros"
+            }
+        ]
+    }
+]
