@@ -13,7 +13,7 @@ router.post('/register', AuthController.register);
 /**
  * POST /api/auth/login
  * Login de usuário
- * Body: { email, password }
+ * Body: { email?, cpf?, password }
  */
 router.post('/login', AuthController.login);
 

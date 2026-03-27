@@ -1,0 +1,499 @@
+{
+  "info": {
+    "_postman_id": "8ee9204f-fca5-4f94-9456-2e30290f63b1",
+    "name": "TaskHub API",
+    "description": "Collection para testar rotas de Auth e Registration do TaskHub.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST Register (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"legacy.user@example.com\",\n  \"password\": \"123456\",\n  \"first_name\": \"Legacy\",\n  \"last_name\": \"User\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.accessToken) pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "if (json?.data?.refreshToken) pm.collectionVariables.set('refreshToken', json.data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST Login (Email + Password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{loginEmail}}\",\n  \"password\": \"{{loginPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.accessToken) pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "if (json?.data?.refreshToken) pm.collectionVariables.set('refreshToken', json.data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST Login (CPF + Password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"{{loginCpf}}\",\n  \"password\": \"{{loginPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.accessToken) pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "if (json?.data?.refreshToken) pm.collectionVariables.set('refreshToken', json.data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.accessToken) pm.collectionVariables.set('accessToken', json.data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{loginPassword}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "change-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Registration",
+      "item": [
+        {
+          "name": "POST Register Client (new)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\",\n  \"confirm_password\": \"{{clientPassword}}\",\n  \"name\": \"Cliente Teste\",\n  \"phone\": \"11999999999\",\n  \"photo\": \"https://example.com/avatar-client.jpg\",\n  \"citizen_data\": {\n    \"document_type\": \"cpf\",\n    \"document_number\": \"123.456.789-09\",\n    \"birth_date\": \"1995-04-20\",\n    \"address_zip_code\": \"01001000\",\n    \"address_state\": \"SP\",\n    \"address_city\": \"Sao Paulo\",\n    \"address_neighborhood\": \"Se\",\n    \"address_street\": \"Praca da Se\",\n    \"address_number\": \"100\",\n    \"address_complement\": \"Apto 10\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/registration/client",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "registration",
+                "client"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.accessToken) pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "if (json?.data?.refreshToken) pm.collectionVariables.set('refreshToken', json.data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST Register Provider (new)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{providerEmail}}\",\n  \"password\": \"{{providerPassword}}\",\n  \"confirm_password\": \"{{providerPassword}}\",\n  \"name\": \"Prestador Teste\",\n  \"phone\": \"11988888888\",\n  \"photo\": \"https://example.com/avatar-provider.jpg\",\n  \"professional_data\": {\n    \"document_type\": \"cpf\",\n    \"document_number\": \"987.654.321-00\",\n    \"birth_date\": \"1990-08-15\",\n    \"service_type\": \"Eletricista\",\n    \"specialties\": \"Instalacao residencial\",\n    \"description\": \"Atendimento rapido e com garantia\",\n    \"years_experience\": 7,\n    \"has_high_school\": true,\n    \"has_technical_courses\": true,\n    \"has_higher_education\": false,\n    \"technical_courses\": [\"Tecnico em Eletrotecnica\"],\n    \"higher_education_courses\": [],\n    \"additional_courses\": [\"NR10\", \"Seguranca do Trabalho\"],\n    \"work_experience_description\": \"7 anos em instalacao e manutencao eletrica\",\n    \"completed_jobs_range\": \"21-50\",\n    \"address_zip_code\": \"22290040\",\n    \"address_state\": \"RJ\",\n    \"address_city\": \"Rio de Janeiro\",\n    \"address_neighborhood\": \"Botafogo\",\n    \"address_street\": \"Rua Voluntarios da Patria\",\n    \"address_number\": \"240\",\n    \"address_complement\": \"Sala 3\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/registration/provider",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "registration",
+                "provider"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.accessToken) pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "if (json?.data?.refreshToken) pm.collectionVariables.set('refreshToken', json.data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST Register Citizen (legacy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"legacy.citizen@example.com\",\n  \"password\": \"123456\",\n  \"first_name\": \"Legacy\",\n  \"last_name\": \"Citizen\",\n  \"citizen_data\": {\n    \"document_type\": \"cpf\",\n    \"document_number\": \"11122233344\",\n    \"birth_date\": \"1999-01-01\",\n    \"phone\": \"11977777777\",\n    \"address_street\": \"Rua A\",\n    \"address_number\": \"10\",\n    \"address_neighborhood\": \"Centro\",\n    \"address_city\": \"Sao Paulo\",\n    \"address_state\": \"SP\",\n    \"address_zip_code\": \"01000000\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/registration/citizen",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "registration",
+                "citizen"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Register Professional (legacy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"legacy.professional@example.com\",\n  \"password\": \"123456\",\n  \"first_name\": \"Legacy\",\n  \"last_name\": \"Professional\",\n  \"professional_data\": {\n    \"document_type\": \"cpf\",\n    \"document_number\": \"44455566677\",\n    \"birth_date\": \"1992-06-10\",\n    \"service_type\": \"Pintor\",\n    \"specialties\": \"Pintura residencial\",\n    \"description\": \"Pintura interna e externa\",\n    \"years_experience\": 5,\n    \"phone\": \"11966666666\",\n    \"work_experience_description\": \"Experiencia em obras residenciais\",\n    \"completed_jobs_range\": \"6-20\",\n    \"address_street\": \"Rua B\",\n    \"address_number\": \"20\",\n    \"address_neighborhood\": \"Bairro B\",\n    \"address_city\": \"Campinas\",\n    \"address_state\": \"SP\",\n    \"address_zip_code\": \"13000000\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/registration/professional",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "registration",
+                "professional"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Registration Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/registration/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "registration",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "loginEmail",
+      "value": "joao@example.com"
+    },
+    {
+      "key": "loginCpf",
+      "value": "12345678909"
+    },
+    {
+      "key": "loginPassword",
+      "value": "123456"
+    },
+    {
+      "key": "newPassword",
+      "value": "1234567"
+    },
+    {
+      "key": "clientEmail",
+      "value": "cliente.teste@example.com"
+    },
+    {
+      "key": "clientPassword",
+      "value": "123456"
+    },
+    {
+      "key": "providerEmail",
+      "value": "prestador.teste@example.com"
+    },
+    {
+      "key": "providerPassword",
+      "value": "123456"
+    }
+  ]
+}

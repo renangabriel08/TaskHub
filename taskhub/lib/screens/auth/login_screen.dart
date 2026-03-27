@@ -12,10 +12,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  late TextEditingController _emailController;
-  late TextEditingController _passwordController;
-  bool _obscurePassword = true;
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -31,8 +31,28 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    Navigator.of(context).pushReplacementNamed('/home');
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.of(context).pushReplacementNamed('/home');
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(authProvider.errorMessage ?? 'Erro ao fazer login'),
+        backgroundColor: AppColors.error,
+      ),
+    );
   }
 
   @override
@@ -50,7 +70,6 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
-                // Logo or Title
                 Text(
                   'Bem-vindo!',
                   style: Theme.of(
@@ -65,10 +84,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 48),
-                // Email Field
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Informe o email'
+                      : null,
                   decoration: InputDecoration(
                     hintText: 'Email',
                     prefixIcon: const Icon(Icons.email_outlined),
@@ -82,10 +103,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Password Field
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Informe a senha' : null,
                   decoration: InputDecoration(
                     hintText: 'Senha',
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -111,7 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                // Login Button
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -145,7 +166,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Sign Up Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

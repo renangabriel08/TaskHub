@@ -11,6 +11,7 @@ class FeedScreen extends StatelessWidget {
       'id': 1,
       'professionalName': 'Carlos Eletricista',
       'category': 'Elétrica',
+      'subcategoryIds': ['manutencao_reparos::eletrica', 'seguranca::alarmes'],
       'level': 3,
       'description':
           'Instalação de novo painel elétrico na residência do Sr. João. Trabalho realizado com excelência e segurança.',
@@ -23,6 +24,7 @@ class FeedScreen extends StatelessWidget {
       'id': 2,
       'professionalName': 'Andrea Fisioterapia',
       'category': 'Saúde',
+      'subcategoryIds': ['saude::terapias', 'saude::massagem'],
       'level': 3,
       'description':
           'Sessão de fisioterapia completa com análise postural e tratamento de dores nas costas. Resultado excepcional!',
@@ -35,6 +37,10 @@ class FeedScreen extends StatelessWidget {
       'id': 3,
       'professionalName': 'Lucas Encanador',
       'category': 'Hidráulica',
+      'subcategoryIds': [
+        'manutencao_reparos::hidraulica',
+        'manutencao_reparos::construcao',
+      ],
       'level': 2,
       'description':
           'Conserto de vazamento em cano de cobre e substituição de sifão. Trabalho rápido e eficiente!',
@@ -47,6 +53,10 @@ class FeedScreen extends StatelessWidget {
       'id': 4,
       'professionalName': 'Marina Design de Interiores',
       'category': 'Decoração',
+      'subcategoryIds': [
+        'decoracao::design_interiores',
+        'decoracao::decoracao_ambientes',
+      ],
       'level': 3,
       'description':
           'Reforma completa de sala de estar com novo layout, pintura e acabamentos. Ambiente completamente transformado!',
@@ -59,6 +69,10 @@ class FeedScreen extends StatelessWidget {
       'id': 5,
       'professionalName': 'Roberto Climatização',
       'category': 'Ar Condicionado',
+      'subcategoryIds': [
+        'manutencao_reparos::outros',
+        'manutencao_reparos::eletrica',
+      ],
       'level': 2,
       'description':
           'Instalação de ar condicionado split com isolamento térmico e higienização. Sistema funcionando perfeitamente!',
@@ -81,6 +95,31 @@ class FeedScreen extends StatelessWidget {
     );
   }
 
+  void _openProfessionalDetail(
+    BuildContext context,
+    Map<String, dynamic> post,
+  ) {
+    final professional = {
+      'id': post['id'],
+      'name': post['professionalName'],
+      'category': post['category'],
+      'level': post['level'],
+      'rating': post['rating'],
+      'reviews': post['reviews'],
+      'avatar': post['avatar'],
+      'price': 'Consultar',
+      'description': 'Profissional especializado',
+      'subcategoryIds': post['subcategoryIds'] ?? [],
+    };
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ProfessionalDetailScreen(professional: professional),
+      ),
+    );
+  }
+
   Widget _buildServicePost(BuildContext context, Map<String, dynamic> post) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -100,27 +139,7 @@ class FeedScreen extends StatelessWidget {
         children: [
           // Header with professional info
           GestureDetector(
-            onTap: () {
-              // Create a professional object from the post data
-              final professional = {
-                'id': post['id'],
-                'name': post['professionalName'],
-                'category': post['category'],
-                'level': post['level'],
-                'rating': post['rating'],
-                'reviews': post['reviews'],
-                'avatar': post['avatar'],
-                'price': 'Consultar',
-                'description': 'Profissional especializado',
-              };
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ProfessionalDetailScreen(professional: professional),
-                ),
-              );
-            },
+            onTap: () => _openProfessionalDetail(context, post),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -284,7 +303,7 @@ class FeedScreen extends StatelessWidget {
               width: double.infinity,
               height: 40,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () => _openProfessionalDetail(context, post),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(

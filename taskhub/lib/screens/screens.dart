@@ -8,6 +8,7 @@ export 'registration/professional_area_screen.dart';
 export 'menu/profile_screen.dart';
 export 'menu/home_menu_screen.dart';
 export 'menu/feed_screen.dart';
+export 'menu/create_publication_screen.dart';
 export 'menu/requests_screen.dart';
 export 'menu/professional_detail_screen.dart';
 export 'menu/hire_professional_screen.dart';

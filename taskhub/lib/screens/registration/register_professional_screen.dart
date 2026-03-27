@@ -4,9 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 import 'package:taskhub/config/app_colors.dart';
-import 'package:taskhub/providers/auth_provider.dart';
 import 'package:taskhub/utils/validation_helper.dart';
 import 'package:taskhub/widgets/app_bar_widget.dart';
 import 'professional_area_screen.dart';
@@ -212,8 +210,6 @@ class _RegisterProfessionalScreenState
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-
     return Scaffold(
       appBar: const TaskHubAppBar(
         title: 'Cadastro - Prestador Autônomo',

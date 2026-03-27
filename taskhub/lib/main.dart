@@ -28,7 +28,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AppProvider()),
 
         // Auth State
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(localStorageService),
+        ),
 
         // Services
         Provider(create: (_) => ApiService()),
@@ -62,11 +64,41 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class _AuthWrapper extends StatelessWidget {
+class _AuthWrapper extends StatefulWidget {
   const _AuthWrapper();
 
   @override
+  State<_AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<_AuthWrapper> {
+  bool _isCheckingSession = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSession();
+  }
+
+  Future<void> _checkSession() async {
+    final storage = context.read<LocalStorageService>();
+    final token = storage.getToken();
+    final refreshToken = storage.getRefreshToken();
+
+    if (token != null && refreshToken != null) {
+      await context.read<AuthProvider>().restoreSession(token, refreshToken);
+    }
+
+    if (mounted) {
+      setState(() => _isCheckingSession = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isCheckingSession) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
         if (authProvider.isAuthenticated) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:taskhub/models/models.dart';
 import 'package:taskhub/providers/auth_provider.dart';
+import 'package:taskhub/services/category_catalog_service.dart';
 import 'package:taskhub/widgets/app_bar_widget.dart';
 
 class ProfessionalAreaScreen extends StatefulWidget {
@@ -35,38 +36,14 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
   String _jobsCompleted = '0-5';
 
   bool _isLoading = false;
+  List<ServiceCategory> _categories = [];
+  final List<String> _selectedServiceTypes = [];
 
-  // Lista de tipos de serviço para autocomplete
-  final List<String> _serviceTypes = [
-    'Eletricista',
-    'Encanador',
-    'Pintor',
-    'Pedreiro',
-    'Marceneiro',
-    'Jardineiro',
-    'Limpeza',
-    'Manutenção',
-    'Instalador de Ar Condicionado',
-    'Reparador de Eletrodomésticos',
-    'Montador de Móveis',
-    'Serviços Gerais',
-    'Técnico de Informática',
-    'Designer Gráfico',
-    'Fotógrafo',
-    'Cozinheiro',
-    'Babá',
-    'Personal Trainer',
-    'Professor Particular',
-    'Tradutor',
-    'Contador',
-    'Advogado',
-    'Médico',
-    'Dentista',
-    'Enfermeiro',
-    'Fisioterapeuta',
-    'Psicólogo',
-    'Veterinário',
-  ];
+  List<String> get _serviceTypeSuggestions {
+    final names = _categories.map((category) => category.name).toSet().toList();
+    names.sort();
+    return names;
+  }
 
   @override
   void initState() {
@@ -76,6 +53,20 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
     _descriptionController = TextEditingController();
     _yearsExperienceController = TextEditingController();
     _workExperienceController = TextEditingController();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await CategoryCatalogService.loadCategories();
+      if (!mounted) return;
+      setState(() {
+        _categories = categories;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      _showErrorSnackBar('Erro ao carregar categorias de serviços');
+    }
   }
 
   @override
@@ -149,7 +140,7 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
         title: const Text('Adicionar Curso Técnico'),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: 'Nome do Curso Técnico'),
+          decoration: const InputDecoration(hintText: 'Nome do Curso Técnico'),
           onSubmitted: (_) => _submitTechnicalCourse(controller),
         ),
         actions: [
@@ -174,9 +165,7 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
         title: const Text('Adicionar Ensino Superior'),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Nome do Curso Superior',
-          ),
+          decoration: const InputDecoration(hintText: 'Nome do Curso Superior'),
           onSubmitted: (_) => _submitHigherEducationCourse(controller),
         ),
         actions: [
@@ -201,7 +190,7 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
         title: const Text('Adicionar Curso'),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: 'Nome do Curso'),
+          decoration: const InputDecoration(hintText: 'Nome do Curso'),
           onSubmitted: (_) => _submitAdditionalCourse(controller),
         ),
         actions: [
@@ -266,8 +255,47 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
     });
   }
 
+  void _addServiceType([String? value]) {
+    final candidate = (value ?? _serviceTypeController.text).trim();
+    if (candidate.isEmpty) return;
+
+    final alreadyExists = _selectedServiceTypes.any(
+      (item) => item.toLowerCase() == candidate.toLowerCase(),
+    );
+
+    if (alreadyExists) {
+      _showErrorSnackBar('Esse tipo de serviço já foi adicionado');
+      return;
+    }
+
+    setState(() {
+      _selectedServiceTypes.add(candidate);
+      _serviceTypeController.clear();
+    });
+  }
+
+  void _removeServiceType(String value) {
+    setState(() {
+      _selectedServiceTypes.remove(value);
+    });
+  }
+
   Future<void> _handleCompleteRegistration() async {
     // Removed validations for easier testing
+
+    final pendingTypedValue = _serviceTypeController.text.trim();
+    final selectedServiceTypes = List<String>.from(_selectedServiceTypes);
+    if (pendingTypedValue.isNotEmpty &&
+        !selectedServiceTypes.any(
+          (item) => item.toLowerCase() == pendingTypedValue.toLowerCase(),
+        )) {
+      selectedServiceTypes.add(pendingTypedValue);
+    }
+
+    if (selectedServiceTypes.isEmpty) {
+      _showErrorSnackBar('Adicione pelo menos um tipo de serviço');
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -296,13 +324,13 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
     });
 
     // Create Professional object
-    Professional professional = Professional(
+    final professional = Professional(
       userId: 0, // Will be set by backend
       documentType: widget.userData['documentType'],
       documentNumber: widget.userData['documentNumber'],
       documentIssuerState: widget.userData['documentIssuerState'],
       professionalRegistry: widget.userData['professionalRegistry'] ?? '',
-      serviceType: _serviceTypeController.text,
+      serviceType: selectedServiceTypes.join(', '),
       specialties: _specialtiesController.text,
       description:
           '${_descriptionController.text}\n\nExperiência de trabalho: ${_workExperienceController.text}',
@@ -321,20 +349,21 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
     );
 
     try {
-      // Simula uma resposta de cadastro bem-sucedida (dados fictícios)
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.setAuthenticatedUser(
-        'fake_access_token_123',
-        'fake_refresh_token_123',
-        User(
-          id: 999,
-          email: widget.userData['email'] ?? 'profissional@taskhub.com',
-          userType: 'professional',
-          firstName: widget.userData['firstName'] ?? 'Profissional',
-          lastName: widget.userData['lastName'] ?? 'Fictício',
-          isActive: true,
-        ),
+      final success = await authProvider.registerProfessional(
+        email: widget.userData['email'] ?? '',
+        password: widget.userData['password'] ?? '',
+        firstName: widget.userData['firstName'] ?? '',
+        lastName: widget.userData['lastName'] ?? '',
+        professionalData: professional,
       );
+
+      if (!success) {
+        _showErrorSnackBar(
+          authProvider.errorMessage ?? 'Erro ao concluir cadastro profissional',
+        );
+        return;
+      }
 
       await _showLevelDialog(level);
 
@@ -389,17 +418,18 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
               const SizedBox(height: 24),
               Autocomplete<String>(
                 optionsBuilder: (TextEditingValue textEditingValue) {
+                  final allSuggestions = _serviceTypeSuggestions;
                   if (textEditingValue.text.isEmpty) {
-                    return const Iterable<String>.empty();
+                    return allSuggestions;
                   }
-                  return _serviceTypes.where((String option) {
+                  return allSuggestions.where((String option) {
                     return option.toLowerCase().contains(
                       textEditingValue.text.toLowerCase(),
                     );
                   });
                 },
                 onSelected: (String selection) {
-                  _serviceTypeController.text = selection;
+                  _addServiceType(selection);
                 },
                 fieldViewBuilder:
                     (
@@ -418,28 +448,53 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
                       return TextFormField(
                         controller: fieldTextEditingController,
                         focusNode: fieldFocusNode,
-                        decoration: const InputDecoration(
-                          labelText: 'Tipo de Serviço',
+                        onFieldSubmitted: (_) => _addServiceType(),
+                        decoration: InputDecoration(
+                          hintText: 'Adicione um ou mais tipos de serviço',
+                          suffixIcon: IconButton(
+                            onPressed: _addServiceType,
+                            icon: const Icon(Icons.add),
+                            tooltip: 'Adicionar tipo de serviço',
+                          ),
                         ),
                       );
                     },
               ),
+              const SizedBox(height: 12),
+              if (_selectedServiceTypes.isEmpty)
+                Text(
+                  'Nenhum tipo de serviço adicionado ainda.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _selectedServiceTypes
+                      .map(
+                        (serviceType) => Chip(
+                          label: Text(serviceType),
+                          onDeleted: () => _removeServiceType(serviceType),
+                        ),
+                      )
+                      .toList(),
+                ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _specialtiesController,
-                decoration: const InputDecoration(labelText: 'Especialidades'),
+                decoration: const InputDecoration(hintText: 'Especialidades'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Descrição'),
+                decoration: const InputDecoration(hintText: 'Descrição'),
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _yearsExperienceController,
                 decoration: const InputDecoration(
-                  labelText: 'Anos de Experiência',
+                  hintText: 'Anos de Experiência',
                 ),
                 keyboardType: TextInputType.number,
               ),
@@ -546,9 +601,7 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
               TextFormField(
                 controller: _workExperienceController,
                 decoration: const InputDecoration(
-                  labelText: 'Descreva sua experiência profissional',
-                  hintText:
-                      'Ex: Trabalhei como eletricista por 5 anos em empresa X...',
+                  hintText: 'Descreva sua experiência profissional',
                 ),
                 maxLines: 4,
               ),
@@ -563,7 +616,7 @@ class _ProfessionalAreaScreenState extends State<ProfessionalAreaScreen> {
               DropdownButtonFormField<String>(
                 value: _jobsCompleted,
                 decoration: const InputDecoration(
-                  labelText: 'Número aproximado de trabalhos realizados',
+                  hintText: 'Número aproximado de trabalhos realizados',
                 ),
                 items: const [
                   DropdownMenuItem(value: '0-5', child: Text('0-5 trabalhos')),

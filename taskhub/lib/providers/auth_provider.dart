@@ -1,14 +1,20 @@
 import 'package:flutter/foundation.dart';
+import 'package:taskhub/services/api_client.dart';
 import 'package:taskhub/services/auth_service.dart';
 import 'package:taskhub/services/registration_service.dart';
+import 'package:taskhub/services/local_storage_service.dart';
 import 'package:taskhub/models/models.dart';
 
 class AuthProvider extends ChangeNotifier {
+  final LocalStorageService _storage;
+
   String? _token;
   String? _refreshToken;
   User? _user;
   bool _isLoading = false;
   String? _errorMessage;
+
+  AuthProvider(this._storage);
 
   // Getters
   String? get token => _token;
@@ -34,6 +40,8 @@ class AuthProvider extends ChangeNotifier {
         _token = response.accessToken;
         _refreshToken = response.refreshToken;
         _user = response.user;
+        await _storage.saveToken(_token!);
+        await _storage.saveRefreshToken(_refreshToken ?? '');
         _isLoading = false;
         notifyListeners();
         return true;
@@ -96,6 +104,7 @@ class AuthProvider extends ChangeNotifier {
     if (_refreshToken != null) {
       await AuthService.logout(_refreshToken!);
     }
+    await _storage.clearTokens();
 
     _token = null;
     _refreshToken = null;
@@ -113,6 +122,10 @@ class AuthProvider extends ChangeNotifier {
 
       if (response.success) {
         _token = response.accessToken;
+        if (_token != null) {
+          ApiClient.setTokens(_token!, _refreshToken!);
+          await _storage.saveToken(_token!);
+        }
         notifyListeners();
         return true;
       } else {
@@ -137,6 +150,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> restoreSession(String token, String refreshToken) async {
     _token = token;
     _refreshToken = refreshToken;
+    ApiClient.setTokens(token, refreshToken);
 
     try {
       final response = await AuthService.getProfile();
@@ -179,6 +193,8 @@ class AuthProvider extends ChangeNotifier {
         _token = response.accessToken;
         _refreshToken = response.refreshToken;
         _user = response.user;
+        await _storage.saveToken(_token!);
+        await _storage.saveRefreshToken(_refreshToken ?? '');
         _isLoading = false;
         notifyListeners();
         return true;
@@ -221,6 +237,8 @@ class AuthProvider extends ChangeNotifier {
         _token = response.accessToken;
         _refreshToken = response.refreshToken;
         _user = response.user;
+        await _storage.saveToken(_token!);
+        await _storage.saveRefreshToken(_refreshToken ?? '');
         _isLoading = false;
         notifyListeners();
         return true;
@@ -259,6 +277,8 @@ class AuthProvider extends ChangeNotifier {
         _token = response.accessToken;
         _refreshToken = response.refreshToken;
         _user = response.user;
+        await _storage.saveToken(_token!);
+        await _storage.saveRefreshToken(_refreshToken ?? '');
         _isLoading = false;
         notifyListeners();
         return true;
@@ -282,6 +302,7 @@ class AuthProvider extends ChangeNotifier {
     String refreshToken,
     User user,
   ) {
+    ApiClient.setTokens(accessToken, refreshToken);
     _token = accessToken;
     _refreshToken = refreshToken;
     _user = user;

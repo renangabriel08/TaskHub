@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:taskhub/config/app_colors.dart';
+import 'package:taskhub/models/models.dart';
 import 'package:taskhub/providers/auth_provider.dart';
 import 'package:taskhub/widgets/app_bar_widget.dart';
 import 'package:taskhub/utils/validation_helper.dart';
@@ -200,8 +201,73 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
     }
   }
 
-  void _handleRegister() {
-    Navigator.of(context).pushReplacementNamed('/home');
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (!_agreeTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Aceite os termos para continuar'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final nameParts = _fullNameController.text.trim().split(RegExp(r'\s+'));
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+    DateTime? birthDate;
+    final rawBirthDate = _birthDateController.text.trim();
+    if (rawBirthDate.isNotEmpty) {
+      final parts = rawBirthDate.split('/');
+      if (parts.length == 3) {
+        birthDate = DateTime.tryParse(
+          '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}',
+        );
+      }
+    }
+
+    final citizen = Citizen(
+      userId: 0,
+      documentType: 'CPF',
+      documentNumber: _cpfController.text.replaceAll(RegExp(r'\D'), ''),
+      birthDate: birthDate,
+      address: Address(
+        street: _streetController.text.trim(),
+        number: _numberController.text.trim(),
+        complement: _complementController.text.trim(),
+        neighborhood: _neighborhoodController.text.trim(),
+        city: _cityController.text.trim(),
+        state: _stateController.text.trim(),
+        zipCode: _cepController.text.replaceAll(RegExp(r'\D'), ''),
+      ),
+    );
+
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.registerCitizen(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+      firstName: firstName,
+      lastName: lastName,
+      citizenData: citizen,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.of(context).pushReplacementNamed('/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            authProvider.errorMessage ?? 'Erro ao realizar cadastro',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -268,6 +334,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 // Full Name
                 TextFormField(
                   controller: _fullNameController,
+                  validator: ValidationHelper.validateName,
                   decoration: InputDecoration(
                     hintText: 'Nome Completo *',
                     prefixIcon: const Icon(Icons.person_outline),
@@ -285,6 +352,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 TextFormField(
                   controller: _cpfController,
                   keyboardType: TextInputType.number,
+                  validator: ValidationHelper.validateCPF,
                   onChanged: (value) {
                     _cpfController.text = InputMask.formatCPF(value);
                     _cpfController.selection = TextSelection.fromPosition(
@@ -308,6 +376,10 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 TextFormField(
                   controller: _birthDateController,
                   keyboardType: TextInputType.datetime,
+                  validator: (value) => ValidationHelper.validateRequired(
+                    value,
+                    'Data de nascimento',
+                  ),
                   onTap: () async {
                     final DateTime? picked = await showDatePicker(
                       context: context,
@@ -345,6 +417,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  validator: ValidationHelper.validateEmail,
                   decoration: InputDecoration(
                     hintText: 'Email *',
                     prefixIcon: const Icon(Icons.email_outlined),
@@ -362,6 +435,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
+                  validator: ValidationHelper.validatePhone,
                   onChanged: (value) {
                     _phoneController.text = InputMask.formatPhone(value);
                     _phoneController.selection = TextSelection.fromPosition(
@@ -385,6 +459,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  validator: ValidationHelper.validatePassword,
                   decoration: InputDecoration(
                     hintText: 'Senha *',
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -414,6 +489,10 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
+                  validator: (value) => ValidationHelper.validatePasswordMatch(
+                    value,
+                    _passwordController.text,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Confirmar Senha *',
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -450,6 +529,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 TextFormField(
                   controller: _cepController,
                   keyboardType: TextInputType.number,
+                  validator: ValidationHelper.validateCEP,
                   onChanged: (value) {
                     _cepController.text = InputMask.formatCEP(value);
                     _cepController.selection = TextSelection.fromPosition(

@@ -89,26 +89,36 @@ class AuthController {
      */
     static async login(req, res) {
         try {
-            const { email, password } = req.body;
+            const { email, cpf, password } = req.body;
+            const normalizedCpf = String(cpf || '').replace(/\D/g, '');
 
             // Validações
-            if (!email || !password) {
+            if ((!email && !normalizedCpf) || !password) {
                 return res.status(400).json({
                     success: false,
-                    error: 'Email e senha são obrigatórios',
+                    error: 'Informe email ou cpf, e senha',
                 });
             }
 
             // Buscar usuário
             const user = await DatabaseService.queryOne(
-                'SELECT id, email, password, first_name, last_name, is_active FROM users WHERE email = ? AND deleted_at IS NULL',
-                [email]
+                `SELECT DISTINCT u.id, u.email, u.password, u.first_name, u.last_name, u.is_active
+                 FROM users u
+                 LEFT JOIN citizens c ON c.user_id = u.id
+                 LEFT JOIN professionals p ON p.user_id = u.id
+                 WHERE u.deleted_at IS NULL
+                   AND (
+                        u.email = ?
+                        OR (c.document_type = 'cpf' AND REPLACE(REPLACE(REPLACE(REPLACE(c.document_number, '.', ''), '-', ''), '/', ''), ' ', '') = ?)
+                        OR (p.document_type = 'cpf' AND REPLACE(REPLACE(REPLACE(REPLACE(p.document_number, '.', ''), '-', ''), '/', ''), ' ', '') = ?)
+                   )`,
+                [email || null, normalizedCpf || null, normalizedCpf || null]
             );
 
             if (!user) {
                 return res.status(401).json({
                     success: false,
-                    error: 'Email ou senha inválidos',
+                    error: 'Credenciais inválidas',
                 });
             }
 
@@ -126,7 +136,7 @@ class AuthController {
             if (!passwordMatch) {
                 return res.status(401).json({
                     success: false,
-                    error: 'Email ou senha inválidos',
+                    error: 'Credenciais inválidas',
                 });
             }
 

@@ -4,7 +4,7 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API Configuration
-  static const String baseUrl = 'http://your-api-url.com/api';
+  static const String baseUrl = 'http://10.91.226.78:3000/api';
   static const String apiVersion = 'v1';
   static const int connectionTimeout = 30000; // milliseconds
   static const int receiveTimeout = 30000; // milliseconds

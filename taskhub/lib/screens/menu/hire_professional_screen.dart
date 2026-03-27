@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:taskhub/config/app_colors.dart';
+import 'package:taskhub/services/category_catalog_service.dart';
 import 'package:taskhub/widgets/app_bar_widget.dart';
 
 class HireProfessionalScreen extends StatefulWidget {
@@ -35,11 +36,51 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
   final ImagePicker _imagePicker = ImagePicker();
   List<XFile> _selectedImages = [];
   bool _isLoadingCEP = false;
+  bool _isLoadingSubcategories = true;
+  List<ServiceSubcategory> _availableSubcategories = [];
+  String? _selectedSubcategoryId;
 
   @override
   void initState() {
     super.initState();
     _cepController.addListener(_onCepChange);
+    _loadProfessionalSubcategories();
+  }
+
+  Future<void> _loadProfessionalSubcategories() async {
+    try {
+      final categories = await CategoryCatalogService.loadCategories();
+      final ids =
+          (widget.professional['subcategoryIds'] as List<dynamic>? ?? [])
+              .map((e) => e.toString())
+              .toList();
+
+      final available =
+          CategoryCatalogService.filterSubcategoriesByQualifiedIds(
+            categories,
+            ids,
+          );
+
+      if (!mounted) return;
+      setState(() {
+        _availableSubcategories = available;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      _showErrorSnackBar('Erro ao carregar subcategorias do profissional');
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingSubcategories = false;
+      });
+    }
+  }
+
+  String _selectedSubcategoryLabel() {
+    final found = _availableSubcategories.where(
+      (sub) => sub.qualifiedId == _selectedSubcategoryId,
+    );
+    return found.isEmpty ? 'Não selecionada' : found.first.displayName;
   }
 
   @override
@@ -218,6 +259,15 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
         return;
       }
 
+      if (_selectedSubcategoryId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Selecione uma subcategoria do serviço'),
+          ),
+        );
+        return;
+      }
+
       if (_cepController.text.isEmpty ||
           _cidadeController.text.isEmpty ||
           _estadoController.text.isEmpty ||
@@ -318,6 +368,55 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                const SizedBox(height: 20),
+
+                // Subcategory Selection
+                Text(
+                  'Subcategoria do serviço',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (_isLoadingSubcategories)
+                  const Center(child: CircularProgressIndicator())
+                else if (_availableSubcategories.isEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                    ),
+                    child: const Text(
+                      'Este profissional ainda não cadastrou subcategorias.',
+                    ),
+                  )
+                else
+                  DropdownButtonFormField<String>(
+                    value: _selectedSubcategoryId,
+                    decoration: InputDecoration(
+                      hintText: 'Selecione uma subcategoria',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    items: _availableSubcategories
+                        .map(
+                          (sub) => DropdownMenuItem<String>(
+                            value: sub.qualifiedId,
+                            child: Text(sub.displayName),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedSubcategoryId = value;
+                      });
+                    },
+                  ),
                 const SizedBox(height: 20),
 
                 // Problem Description
@@ -569,8 +668,7 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                     return null;
                   },
                   decoration: InputDecoration(
-                    hintText: 'Digite o CEP',
-                    labelText: 'CEP',
+                    hintText: 'CEP',
                     prefixIcon: const Icon(Icons.location_on),
                     suffix: _isLoadingCEP
                         ? SizedBox(
@@ -613,8 +711,8 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          labelText: 'Estado',
-                          hintText: 'UF',
+                          hintText: 'Estado',
+                          labelText: 'UF',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -634,7 +732,6 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          labelText: 'Cidade',
                           hintText: 'Cidade',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -657,7 +754,6 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                     return null;
                   },
                   decoration: InputDecoration(
-                    labelText: 'Bairro',
                     hintText: 'Bairro',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -677,7 +773,6 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                     return null;
                   },
                   decoration: InputDecoration(
-                    labelText: 'Rua',
                     hintText: 'Rua',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -697,7 +792,6 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                     return null;
                   },
                   decoration: InputDecoration(
-                    labelText: 'Número',
                     hintText: 'Número',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -734,6 +828,11 @@ class _HireProfessionalScreenState extends State<HireProfessionalScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _buildSummaryRow(
+                        'Subcategoria:',
+                        _selectedSubcategoryLabel(),
+                      ),
+                      const SizedBox(height: 8),
                       _buildSummaryRow(
                         'Data e Hora:',
                         _selectedDate == null || _selectedTime == null

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:taskhub/config/app_colors.dart';
+import 'package:taskhub/models/models.dart';
 import 'package:taskhub/providers/auth_provider.dart';
 import 'package:taskhub/widgets/app_bar_widget.dart';
 import 'package:taskhub/utils/validation_helper.dart';
@@ -74,8 +75,57 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
     super.dispose();
   }
 
-  void _handleRegister() {
-    Navigator.of(context).pushReplacementNamed('/home');
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (!_agreeTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Aceite os termos para continuar'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final company = Company(
+      userId: 0,
+      companyName: _companyNameController.text.trim(),
+      legalName: _companyNameController.text.trim(),
+      cnpj: _cnpjController.text.replaceAll(RegExp(r'\D'), ''),
+      serviceType: 'geral',
+      description: _descriptionController.text.trim(),
+      address: Address(
+        street: _streetController.text.trim(),
+        number: _numberController.text.trim(),
+        neighborhood: _neighborhoodController.text.trim(),
+        city: _cityController.text.trim(),
+        state: _stateController.text.trim(),
+        zipCode: _cepController.text.replaceAll(RegExp(r'\D'), ''),
+      ),
+    );
+
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.registerCompany(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+      companyData: company,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.of(context).pushReplacementNamed('/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            authProvider.errorMessage ?? 'Erro ao realizar cadastro',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -100,6 +150,8 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
                 // Company Name
                 TextFormField(
                   controller: _companyNameController,
+                  validator: (value) =>
+                      ValidationHelper.validateRequired(value, 'Razão Social'),
                   decoration: _inputDecoration(
                     'Razão Social *',
                     Icons.business,
@@ -110,6 +162,7 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
                 TextFormField(
                   controller: _cnpjController,
                   keyboardType: TextInputType.number,
+                  validator: ValidationHelper.validateCNPJ,
                   onChanged: (value) {
                     _cnpjController.text = InputMask.formatCNPJ(value);
                     _cnpjController.selection = TextSelection.fromPosition(
@@ -124,6 +177,7 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
                 // Responsible Name
                 TextFormField(
                   controller: _responsibleNameController,
+                  validator: ValidationHelper.validateName,
                   decoration: _inputDecoration(
                     'Nome do Responsável *',
                     Icons.person,
@@ -134,6 +188,7 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
                 TextFormField(
                   controller: _responsibleCpfController,
                   keyboardType: TextInputType.number,
+                  validator: ValidationHelper.validateCPF,
                   onChanged: (value) {
                     _responsibleCpfController.text = InputMask.formatCPF(value);
                     _responsibleCpfController.selection =
@@ -152,6 +207,7 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  validator: ValidationHelper.validateEmail,
                   decoration: _inputDecoration('Email *', Icons.email_outlined),
                 ),
                 const SizedBox(height: 12),
@@ -159,6 +215,7 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
+                  validator: ValidationHelper.validatePhone,
                   onChanged: (value) {
                     _phoneController.text = InputMask.formatPhone(value);
                     _phoneController.selection = TextSelection.fromPosition(
@@ -177,6 +234,7 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
                 TextFormField(
                   controller: _cepController,
                   keyboardType: TextInputType.number,
+                  validator: ValidationHelper.validateCEP,
                   onChanged: (value) {
                     _cepController.text = InputMask.formatCEP(value);
                     _cepController.selection = TextSelection.fromPosition(
@@ -244,6 +302,7 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  validator: ValidationHelper.validatePassword,
                   decoration: InputDecoration(
                     hintText: 'Senha *',
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -273,6 +332,10 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
+                  validator: (value) => ValidationHelper.validatePasswordMatch(
+                    value,
+                    _passwordController.text,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Confirmar Senha *',
                     prefixIcon: const Icon(Icons.lock_outline),

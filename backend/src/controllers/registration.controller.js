@@ -3,12 +3,31 @@ const AuthService = require('../services/auth.service');
 const DatabaseService = require('../services/database.service');
 
 class RegistrationController {
+    static getStatusCodeFromError(error) {
+        if (
+            error.message.includes('incompletos') ||
+            error.message.includes('obrigatório') ||
+            error.message.includes('obrigatórios') ||
+            error.message.includes('inválida') ||
+            error.message.includes('inválido') ||
+            error.message.includes('não conferem')
+        ) {
+            return 400;
+        }
+
+        if (error.message.includes('já')) {
+            return 409;
+        }
+
+        return 500;
+    }
+
     /**
      * Registrar um novo Cidadão
      */
     static async registerCitizen(req, res) {
         try {
-            const { email, password, first_name, last_name, citizen_data } = req.body;
+            const { email, password } = req.body;
 
             // Validações
             if (!email || !password) {
@@ -18,13 +37,7 @@ class RegistrationController {
                 });
             }
 
-            const userId = await RegistrationService.registerCitizen({
-                email,
-                password,
-                first_name,
-                last_name,
-                citizen_data,
-            });
+            const userId = await RegistrationService.registerCitizen(req.body);
 
             // Buscar usuário criado
             const user = await DatabaseService.queryOne(
@@ -54,11 +67,7 @@ class RegistrationController {
                 },
             });
         } catch (error) {
-            const statusCode = error.message.includes('já')
-                ? 409
-                : error.message.includes('incompletos')
-                    ? 400
-                    : 500;
+            const statusCode = RegistrationController.getStatusCodeFromError(error);
 
             res.status(statusCode).json({
                 success: false,
@@ -72,7 +81,7 @@ class RegistrationController {
      */
     static async registerProfessional(req, res) {
         try {
-            const { email, password, first_name, last_name, professional_data } = req.body;
+            const { email, password } = req.body;
 
             // Validações
             if (!email || !password) {
@@ -82,13 +91,7 @@ class RegistrationController {
                 });
             }
 
-            const userId = await RegistrationService.registerProfessional({
-                email,
-                password,
-                first_name,
-                last_name,
-                professional_data,
-            });
+            const userId = await RegistrationService.registerProfessional(req.body);
 
             // Buscar usuário criado
             const user = await DatabaseService.queryOne(
@@ -118,17 +121,27 @@ class RegistrationController {
                 },
             });
         } catch (error) {
-            const statusCode = error.message.includes('já')
-                ? 409
-                : error.message.includes('incompletos')
-                    ? 400
-                    : 500;
+            const statusCode = RegistrationController.getStatusCodeFromError(error);
 
             res.status(statusCode).json({
                 success: false,
                 error: error.message,
             });
         }
+    }
+
+    /**
+     * Alias: Registrar novo Cliente
+     */
+    static async registerClient(req, res) {
+        return RegistrationController.registerCitizen(req, res);
+    }
+
+    /**
+     * Alias: Registrar novo Prestador
+     */
+    static async registerProvider(req, res) {
+        return RegistrationController.registerProfessional(req, res);
     }
 
     /**
@@ -200,13 +213,14 @@ class RegistrationController {
         try {
             const userId = req.user.id;
 
-            const { user, profile } = await RegistrationService.getUserProfile(userId);
+            const { user, profile, addresses } = await RegistrationService.getUserProfile(userId);
 
             res.json({
                 success: true,
                 data: {
                     user,
                     profile,
+                    addresses,
                 },
             });
         } catch (error) {
